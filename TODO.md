@@ -1,0 +1,1 @@
+- [] Global shortcut removes the default functionality of the shortcut, I don't want that, most likely
