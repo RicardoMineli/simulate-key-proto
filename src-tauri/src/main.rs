@@ -49,25 +49,20 @@ fn main() {
                 // Global Shortcut setup
                 use tauri_plugin_global_shortcut::{Code, Modifiers, Shortcut};
 
-                let ctrl_shift_n_shortcut =
-                    Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::KeyN);
-
-                let ctrl_d_shortcut = Shortcut::new(Some(Modifiers::CONTROL), Code::KeyD);
+                let show_and_hide_shortcut = Shortcut::new(Some(Modifiers::CONTROL), Code::F12);
 
                 app.handle().plugin(
                     tauri_plugin_global_shortcut::Builder::new()
-                        .with_shortcuts([ctrl_shift_n_shortcut, ctrl_d_shortcut])?
-                        .with_handler(move |_app, shortcut| {
-                            let window = _app.get_window("main").unwrap();
-                            if shortcut == &ctrl_shift_n_shortcut {
-                                println!("Ctrl-Shift-N Detected!");
-                                window.hide().unwrap();
-                            }
-                            if shortcut == &ctrl_d_shortcut {
-                                println!("Ctrl-D Detected!");
-                                window.show().unwrap();
-                                window.unminimize().unwrap();
-                                window.set_focus().unwrap();
+                        .with_shortcuts([show_and_hide_shortcut])?
+                        .with_handler(move |app, shortcut| {
+                            let window = app.get_window("main").unwrap();
+                            if shortcut == &show_and_hide_shortcut {
+                                if window.is_visible().unwrap() {
+                                    window.hide().unwrap();
+                                } else {
+                                    window.show().unwrap();
+                                    window.set_focus().unwrap();
+                                }
                             }
                         })
                         .build(),

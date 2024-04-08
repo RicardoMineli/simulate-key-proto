@@ -15,7 +15,9 @@
         "width": 800,
         "height": 600,
         "transparent": true,
-        "fullscreen": false
+        "fullscreen": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true
       }
     ],
     "security": {

@@ -1,1 +1,3 @@
-- [] Global shortcut removes the default functionality of the shortcut, I don't want that, most likely
+- [] Global shortcut removes the default functionality of the shortcut, I don't want that, I think...
+
+- [] Make show_and_hide_shortcut user customizable
