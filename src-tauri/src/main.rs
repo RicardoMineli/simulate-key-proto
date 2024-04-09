@@ -1,11 +1,26 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use std::sync::Mutex;
+
 use tauri::{
     menu::{MenuBuilder, MenuItemBuilder},
     tray::{ClickType, TrayIconBuilder},
-    Manager,
+    Manager, State,
 };
+
+use enigo::{Direction::Click, Enigo, Key, Keyboard, Settings};
+
+use windows::Win32::{
+    Foundation::HWND,
+    UI::WindowsAndMessaging::{GetForegroundWindow, SetForegroundWindow},
+};
+
+// https://blog.moonguard.dev/manage-state-with-tauri
+#[derive(Default)]
+struct AppState {
+    previous_handle: Mutex<HWND>,
+}
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[tauri::command]
@@ -14,11 +29,30 @@ fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
 
+#[tauri::command]
+fn press_number_1(window: tauri::Window, app_state: State<AppState>) {
+    println!("Simulated Press!");
+    window.hide().unwrap();
+
+    let previous_handle_lock = app_state.previous_handle.lock().unwrap();
+
+    unsafe {
+        SetForegroundWindow(*previous_handle_lock);
+    }
+    let mut enigo = Enigo::new(&Settings::default()).unwrap();
+    enigo.key(Key::Unicode('g'), Click).unwrap();
+    // thread::sleep(Duration::from_secs(1));
+    // enigo.key(Key::Unicode('1'), Release).unwrap();
+}
+
 fn main() {
     tauri::Builder::default()
         .setup(|app| {
             #[cfg(desktop)]
             {
+                // Init state
+                app.manage(AppState::default());
+
                 let quit = MenuItemBuilder::new("Quit").id("quit").build(app).unwrap();
 
                 let menu = MenuBuilder::new(app).items(&[&quit]).build().unwrap();
@@ -61,7 +95,8 @@ fn main() {
                                     window.hide().unwrap();
                                 } else {
                                     window.show().unwrap();
-                                    window.set_focus().unwrap();
+                                    set_previous_handle_on_windows(app);
+                                    // window.set_focus().unwrap();
                                 }
                             }
                         })
@@ -73,7 +108,16 @@ fn main() {
         })
         // .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_shell::init())
-        .invoke_handler(tauri::generate_handler![greet])
+        .invoke_handler(tauri::generate_handler![greet, press_number_1])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+fn set_previous_handle_on_windows(app: &tauri::AppHandle) {
+    // Save state to var so we can use it from the app handle
+    let app_state: State<AppState> = app.state::<AppState>();
+
+    // Create lock for thread safety
+    let mut previous_handle_lock = app_state.previous_handle.lock().unwrap();
+    unsafe { *previous_handle_lock = GetForegroundWindow() }
 }

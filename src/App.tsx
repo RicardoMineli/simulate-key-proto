@@ -46,6 +46,9 @@ function App() {
       </form>
 
       <p>{greetMsg}</p>
+      <div>
+        <button onClick={() => invoke("press_number_1")}> Click Here</button>
+      </div>
     </div>
   );
 }
