@@ -9,7 +9,11 @@ use tauri::{
     Manager, State,
 };
 
-use enigo::{Direction::Click, Enigo, Key, Keyboard, Settings};
+use enigo::{
+    agent::{Agent, Token},
+    Direction::{Click, Press, Release},
+    Enigo, Key, Settings,
+};
 
 use windows::Win32::{
     Foundation::HWND,
@@ -17,12 +21,11 @@ use windows::Win32::{
 };
 
 // https://blog.moonguard.dev/manage-state-with-tauri
-#[derive(Default)]
 struct AppState {
     previous_handle: Mutex<HWND>,
+    enigo: Mutex<Enigo>,
 }
 
-// Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[tauri::command]
 fn greet(name: &str) -> String {
     println!("Called {}", name);
@@ -30,19 +33,21 @@ fn greet(name: &str) -> String {
 }
 
 #[tauri::command]
-fn press_number_1(window: tauri::Window, app_state: State<AppState>) {
-    println!("Simulated Press!");
+fn use_shortcut(input: &str, window: tauri::Window, app_state: State<AppState>) {
     window.hide().unwrap();
 
     let previous_handle_lock = app_state.previous_handle.lock().unwrap();
+    let mut enigo_lock = app_state.enigo.lock().unwrap();
 
     unsafe {
         SetForegroundWindow(*previous_handle_lock);
     }
-    let mut enigo = Enigo::new(&Settings::default()).unwrap();
-    enigo.key(Key::Unicode('g'), Click).unwrap();
-    // thread::sleep(Duration::from_secs(1));
-    // enigo.key(Key::Unicode('1'), Release).unwrap();
+
+    let tokens = parse_enigo_keys(input);
+
+    for token in &tokens {
+        enigo_lock.execute(token).unwrap();
+    }
 }
 
 fn main() {
@@ -51,7 +56,16 @@ fn main() {
             #[cfg(desktop)]
             {
                 // Init state
-                app.manage(AppState::default());
+                app.manage(AppState {
+                    previous_handle: Mutex::new(HWND(0)),
+                    enigo: Mutex::new(Enigo::new(&Settings::default()).unwrap()),
+                });
+
+                let app_state: State<AppState> = app.state();
+
+                let previous_handle_lock = app_state.previous_handle.lock().unwrap();
+
+                println!("Previous window handle: {:?}", *previous_handle_lock);
 
                 let quit = MenuItemBuilder::new("Quit").id("quit").build(app).unwrap();
 
@@ -108,7 +122,7 @@ fn main() {
         })
         // .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_shell::init())
-        .invoke_handler(tauri::generate_handler![greet, press_number_1])
+        .invoke_handler(tauri::generate_handler![greet, use_shortcut])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
@@ -120,4 +134,149 @@ fn set_previous_handle_on_windows(app: &tauri::AppHandle) {
     // Create lock for thread safety
     let mut previous_handle_lock = app_state.previous_handle.lock().unwrap();
     unsafe { *previous_handle_lock = GetForegroundWindow() }
+}
+
+// https://github.com/enigo-rs/enigo/blob/main/examples/serde.rs
+fn parse_enigo_keys(input: &str) -> Vec<Token> {
+    // Works for any Unicode, Control, Shift, Alt and F1...F24
+    let mut used_ctrl: bool = false;
+    let mut used_shift: bool = false;
+    let mut used_alt: bool = false;
+
+    let mut tokens = Vec::new();
+    let input_lowercase = input.to_lowercase();
+    let parts: Vec<&str> = input_lowercase.split('+').collect();
+    for part in parts {
+        let trimmed_part = part.trim();
+        match trimmed_part {
+            "ctrl" => {
+                tokens.push(Token::Key(Key::Control, Press));
+                used_ctrl = true;
+            }
+            "shift" => {
+                tokens.push(Token::Key(Key::Shift, Press));
+                used_shift = true;
+            }
+            "alt" => {
+                tokens.push(Token::Key(Key::Alt, Press));
+                used_alt = true;
+            }
+            "f1" => {
+                println!("It got here");
+                tokens.push(Token::Key(Key::F1, Press));
+            }
+            "f2" => {
+                println!("It got here");
+                tokens.push(Token::Key(Key::F2, Press));
+            }
+            "f3" => {
+                println!("It got here");
+                tokens.push(Token::Key(Key::F3, Press));
+            }
+            "f4" => {
+                println!("It got here");
+                tokens.push(Token::Key(Key::F4, Press));
+            }
+            "f5" => {
+                println!("It got here");
+                tokens.push(Token::Key(Key::F5, Press));
+            }
+            "f6" => {
+                println!("It got here");
+                tokens.push(Token::Key(Key::F6, Press));
+            }
+            "f7" => {
+                println!("It got here");
+                tokens.push(Token::Key(Key::F7, Press));
+            }
+            "f8" => {
+                println!("It got here");
+                tokens.push(Token::Key(Key::F8, Press));
+            }
+            "f9" => {
+                println!("It got here");
+                tokens.push(Token::Key(Key::F9, Press));
+            }
+            "f10" => {
+                println!("It got here");
+                tokens.push(Token::Key(Key::F10, Press));
+            }
+            "f11" => {
+                println!("It got here");
+                tokens.push(Token::Key(Key::F11, Press));
+            }
+            "f12" => {
+                println!("It got here");
+                tokens.push(Token::Key(Key::F12, Press));
+            }
+            "f13" => {
+                println!("It got here");
+                tokens.push(Token::Key(Key::F13, Press));
+            }
+            "f14" => {
+                println!("It got here");
+                tokens.push(Token::Key(Key::F14, Press));
+            }
+            "f15" => {
+                println!("It got here");
+                tokens.push(Token::Key(Key::F15, Press));
+            }
+            "f16" => {
+                println!("It got here");
+                tokens.push(Token::Key(Key::F16, Press));
+            }
+            "f17" => {
+                println!("It got here");
+                tokens.push(Token::Key(Key::F17, Press));
+            }
+            "f18" => {
+                println!("It got here");
+                tokens.push(Token::Key(Key::F18, Press));
+            }
+            "f19" => {
+                println!("It got here");
+                tokens.push(Token::Key(Key::F19, Press));
+            }
+            "f20" => {
+                println!("It got here");
+                tokens.push(Token::Key(Key::F20, Press));
+            }
+            "f21" => {
+                println!("It got here");
+                tokens.push(Token::Key(Key::F21, Press));
+            }
+            "f22" => {
+                println!("It got here");
+                tokens.push(Token::Key(Key::F22, Press));
+            }
+            "f23" => {
+                println!("It got here");
+                tokens.push(Token::Key(Key::F23, Press));
+            }
+            "f24" => {
+                println!("It got here");
+                tokens.push(Token::Key(Key::F24, Press));
+            }
+
+            s if s.len() == 1 => {
+                if let Some(c) = trimmed_part.chars().next() {
+                    tokens.push(Token::Key(Key::Unicode(c), Click));
+                }
+            }
+
+            _ => {}
+        }
+    }
+
+    if used_ctrl {
+        tokens.push(Token::Key(Key::Control, Release));
+    }
+    if used_shift {
+        tokens.push(Token::Key(Key::Shift, Release));
+    }
+    if used_alt {
+        tokens.push(Token::Key(Key::Alt, Release));
+    }
+
+    tokens
 }
