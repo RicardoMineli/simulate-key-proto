@@ -1,13 +1,16 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::sync::Mutex;
+use serde_json::json;
+use std::{path::PathBuf, str::FromStr, sync::Mutex};
 
 use tauri::{
     menu::{MenuBuilder, MenuItemBuilder},
     tray::{ClickType, TrayIconBuilder},
-    Manager, State,
+    Manager, State, Wry,
 };
+
+use tauri_plugin_store::{with_store, StoreBuilder, StoreCollection};
 
 use enigo::{
     agent::{Agent, Token},
@@ -49,23 +52,42 @@ fn use_shortcut(input: &str, window: tauri::Window, app_state: State<AppState>) 
         enigo_lock.execute(token).unwrap();
     }
 }
-
 fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_store::Builder::new().build())
         .setup(|app| {
             #[cfg(desktop)]
             {
+                let stores = app.app_handle().state::<StoreCollection<Wry>>();
+                let path = PathBuf::from("user_config.json");
+
+                with_store(app.app_handle().clone(), stores, path, |store| {
+                    // Note that values must be serde_json::Value instances,
+                    // otherwise, they will not be compatible with the JavaScript bindings.
+                    store.insert(
+                        "show_and_hide_global_shortcut".to_string(),
+                        json!("ctrl+f12"),
+                    )?;
+                    store.insert(
+                        "shortcuts".to_string(),
+                        json!(["ctrl+c", "ctrl+v", "ctrl+k+ctrl+c"]),
+                    )?;
+                    // You can manually save the store after making changes.
+                    // Otherwise, it will save upon graceful exit as described above.
+                    store.save()?;
+
+                    Ok(())
+                })?;
+
                 // Init state
                 app.manage(AppState {
                     previous_handle: Mutex::new(HWND(0)),
                     enigo: Mutex::new(Enigo::new(&Settings::default()).unwrap()),
                 });
 
-                let app_state: State<AppState> = app.state();
-
-                let previous_handle_lock = app_state.previous_handle.lock().unwrap();
-
-                println!("Previous window handle: {:?}", *previous_handle_lock);
+                // let app_state: State<AppState> = app.state();
+                // let previous_handle_lock = app_state.previous_handle.lock().unwrap();
+                // println!("Previous window handle: {:?}", *previous_handle_lock);
 
                 let quit = MenuItemBuilder::new("Quit").id("quit").build(app).unwrap();
 
@@ -96,15 +118,21 @@ fn main() {
 
                 // Global Shortcut setup
                 use tauri_plugin_global_shortcut::{Code, Modifiers, Shortcut};
-
-                let show_and_hide_shortcut = Shortcut::new(Some(Modifiers::CONTROL), Code::F12);
+                // acess user_config store to get shortcut
+                let mut store = StoreBuilder::new("user_config.json").build(app.handle().clone());
+                store.load().expect("Failed to load store from disk");
+                let value = store
+                    .get("show_and_hide_global_shortcut")
+                    .expect("Failed to get value from store");
+                let show_and_hide_global_shortcut =
+                    Shortcut::from_str(value.as_str().unwrap()).unwrap();
 
                 app.handle().plugin(
                     tauri_plugin_global_shortcut::Builder::new()
-                        .with_shortcuts([show_and_hide_shortcut])?
+                        .with_shortcuts([show_and_hide_global_shortcut])?
                         .with_handler(move |app, shortcut| {
                             let window = app.get_window("main").unwrap();
-                            if shortcut == &show_and_hide_shortcut {
+                            if shortcut == &show_and_hide_global_shortcut {
                                 if window.is_visible().unwrap() {
                                     window.hide().unwrap();
                                 } else {
@@ -162,99 +190,75 @@ fn parse_enigo_keys(input: &str) -> Vec<Token> {
                 used_alt = true;
             }
             "f1" => {
-                println!("It got here");
                 tokens.push(Token::Key(Key::F1, Press));
             }
             "f2" => {
-                println!("It got here");
                 tokens.push(Token::Key(Key::F2, Press));
             }
             "f3" => {
-                println!("It got here");
                 tokens.push(Token::Key(Key::F3, Press));
             }
             "f4" => {
-                println!("It got here");
                 tokens.push(Token::Key(Key::F4, Press));
             }
             "f5" => {
-                println!("It got here");
                 tokens.push(Token::Key(Key::F5, Press));
             }
             "f6" => {
-                println!("It got here");
                 tokens.push(Token::Key(Key::F6, Press));
             }
             "f7" => {
-                println!("It got here");
                 tokens.push(Token::Key(Key::F7, Press));
             }
             "f8" => {
-                println!("It got here");
                 tokens.push(Token::Key(Key::F8, Press));
             }
             "f9" => {
-                println!("It got here");
                 tokens.push(Token::Key(Key::F9, Press));
             }
             "f10" => {
-                println!("It got here");
                 tokens.push(Token::Key(Key::F10, Press));
             }
             "f11" => {
-                println!("It got here");
                 tokens.push(Token::Key(Key::F11, Press));
             }
             "f12" => {
-                println!("It got here");
                 tokens.push(Token::Key(Key::F12, Press));
             }
             "f13" => {
-                println!("It got here");
                 tokens.push(Token::Key(Key::F13, Press));
             }
             "f14" => {
-                println!("It got here");
                 tokens.push(Token::Key(Key::F14, Press));
             }
             "f15" => {
-                println!("It got here");
                 tokens.push(Token::Key(Key::F15, Press));
             }
             "f16" => {
-                println!("It got here");
                 tokens.push(Token::Key(Key::F16, Press));
             }
             "f17" => {
-                println!("It got here");
                 tokens.push(Token::Key(Key::F17, Press));
             }
             "f18" => {
-                println!("It got here");
                 tokens.push(Token::Key(Key::F18, Press));
             }
             "f19" => {
-                println!("It got here");
                 tokens.push(Token::Key(Key::F19, Press));
             }
             "f20" => {
-                println!("It got here");
                 tokens.push(Token::Key(Key::F20, Press));
             }
             "f21" => {
-                println!("It got here");
                 tokens.push(Token::Key(Key::F21, Press));
             }
             "f22" => {
-                println!("It got here");
                 tokens.push(Token::Key(Key::F22, Press));
             }
             "f23" => {
-                println!("It got here");
                 tokens.push(Token::Key(Key::F23, Press));
             }
             "f24" => {
-                println!("It got here");
                 tokens.push(Token::Key(Key::F24, Press));
             }
 

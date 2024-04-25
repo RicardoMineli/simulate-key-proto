@@ -36,6 +36,7 @@
 
 .shortcutButton {
   height: 6em;
+  min-width: 6em;
   padding: 1.5em;
   margin: 0.5em;
   will-change: filter;
