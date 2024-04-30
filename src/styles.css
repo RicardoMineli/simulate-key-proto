@@ -41,6 +41,21 @@
   margin: 0.5em;
   will-change: filter;
   transition: 0.75s;
+
+  input {
+    max-width: 100px;
+    background: none;
+    background-color: transparent;
+    outline: none;
+    border: none;
+    display: inline;
+    font-family: inherit;
+    font-size: inherit;
+    text-align: center;
+    padding: none;
+    width: auto;
+    box-shadow: none;
+  }
 }
 
 .shortcutButton:hover {

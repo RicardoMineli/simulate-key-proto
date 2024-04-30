@@ -1,3 +1,7 @@
+- [] Prevent panick when changing shortcut to a invalid value
+
+  - Example: Setting the global shortcut to "ctrl+f12gibberish" will panick the app
+
 - [] Make app work on linux
 - Currently the get handle on global hotkey is using Windows API calls
 - so this app is Windows only right now
@@ -12,5 +16,10 @@
 - [] Make profiles for multiple user defined shortcuts
 
 - [] Check if app work on games with anti cheat
+
   - [] Check enigo
   - [] Check Windows get handle
+
+- [] Refactor whole code
+  - Lots of code are repeating and need overall polish
+  - Maybe just rewrite the whole thing when finishing this prototype

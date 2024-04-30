@@ -7,10 +7,10 @@ use std::{path::PathBuf, str::FromStr, sync::Mutex};
 use tauri::{
     menu::{MenuBuilder, MenuItemBuilder},
     tray::{ClickType, TrayIconBuilder},
-    Manager, State, Wry,
+    AppHandle, Manager, State, Wry,
 };
-
-use tauri_plugin_store::{with_store, StoreBuilder, StoreCollection};
+use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
+use tauri_plugin_store::{with_store, Store, StoreBuilder, StoreCollection};
 
 use enigo::{
     agent::{Agent, Token},
@@ -33,6 +33,63 @@ struct AppState {
 fn greet(name: &str) -> String {
     println!("Called {}", name);
     format!("Hello, {}! You've been greeted from Rust!", name)
+}
+
+#[tauri::command]
+fn update_shortcuts(new_shortcut: &str, app: tauri::AppHandle) {
+    let stores = app.state::<StoreCollection<Wry>>();
+    let path = PathBuf::from("user_config.json");
+    with_store(app.clone(), stores, path, |store| {
+        let value = store
+            .get("show_and_hide_global_shortcut")
+            .expect("Failed to get value from store");
+        let mut show_and_hide_global_shortcut =
+            Shortcut::from_str(value.as_str().unwrap()).unwrap();
+        let new_shortcut_as_hotkey = Shortcut::from_str(new_shortcut).unwrap();
+
+        app.global_shortcut()
+            .unregister(show_and_hide_global_shortcut)
+            .unwrap();
+
+        show_and_hide_global_shortcut = new_shortcut_as_hotkey.clone();
+
+        app.global_shortcut()
+            .on_shortcut(new_shortcut_as_hotkey, move |app, shortcut| {
+                let window = app.get_window("main").unwrap();
+                if shortcut == &show_and_hide_global_shortcut {
+                    if window.is_visible().unwrap() {
+                        window.hide().unwrap();
+                    } else {
+                        window.show().unwrap();
+                        set_previous_handle_on_windows(app);
+                        // window.set_focus().unwrap();
+                    }
+                }
+            })
+            .unwrap();
+
+        store
+            .insert(
+                "show_and_hide_global_shortcut".to_string(),
+                json!(new_shortcut),
+            )
+            .unwrap();
+        // You can manually save the store after making changes.
+        // Otherwise, it will save upon graceful exit as described above.
+        store.save().unwrap();
+        Ok(())
+    })
+    .unwrap();
+}
+
+#[tauri::command]
+fn hide_window(window: tauri::Window, app_state: State<AppState>) {
+    window.hide().unwrap();
+
+    let previous_handle_lock = app_state.previous_handle.lock().unwrap();
+    unsafe {
+        SetForegroundWindow(*previous_handle_lock);
+    }
 }
 
 #[tauri::command]
@@ -64,18 +121,19 @@ fn main() {
                 with_store(app.app_handle().clone(), stores, path, |store| {
                     // Note that values must be serde_json::Value instances,
                     // otherwise, they will not be compatible with the JavaScript bindings.
-                    store.insert(
-                        "show_and_hide_global_shortcut".to_string(),
-                        json!("ctrl+f12"),
-                    )?;
-                    store.insert(
-                        "shortcuts".to_string(),
-                        json!(["ctrl+c", "ctrl+v", "ctrl+k+ctrl+c"]),
-                    )?;
-                    // You can manually save the store after making changes.
-                    // Otherwise, it will save upon graceful exit as described above.
-                    store.save()?;
-
+                    if store.is_empty() {
+                        store.insert(
+                            "show_and_hide_global_shortcut".to_string(),
+                            json!("ctrl+f12"),
+                        )?;
+                        store.insert(
+                            "shortcuts".to_string(),
+                            json!(["ctrl+c", "ctrl+v", "ctrl+k+ctrl+c"]),
+                        )?;
+                        // You can manually save the store after making changes.
+                        // Otherwise, it will save upon graceful exit as described above.
+                        store.save()?;
+                    }
                     Ok(())
                 })?;
 
@@ -100,7 +158,7 @@ fn main() {
                     .menu(&menu)
                     .on_menu_event(|app, event| match event.id().as_ref() {
                         "quit" => {
-                            app.exit(0);
+                            AppHandle::exit(app, 0);
                         }
                         _ => {}
                     })
@@ -117,7 +175,7 @@ fn main() {
                     .build(app);
 
                 // Global Shortcut setup
-                use tauri_plugin_global_shortcut::{Code, Modifiers, Shortcut};
+
                 // acess user_config store to get shortcut
                 let mut store = StoreBuilder::new("user_config.json").build(app.handle().clone());
                 store.load().expect("Failed to load store from disk");
@@ -150,7 +208,12 @@ fn main() {
         })
         // .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_shell::init())
-        .invoke_handler(tauri::generate_handler![greet, use_shortcut])
+        .invoke_handler(tauri::generate_handler![
+            greet,
+            use_shortcut,
+            hide_window,
+            update_shortcuts
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
