@@ -10,7 +10,7 @@ use tauri::{
     AppHandle, Manager, State, Wry,
 };
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
-use tauri_plugin_store::{with_store, Store, StoreBuilder, StoreCollection};
+use tauri_plugin_store::{with_store, StoreBuilder, StoreCollection};
 
 use enigo::{
     agent::{Agent, Token},
