@@ -8,7 +8,7 @@
   line-height: 24px;
   font-weight: 400;
 
-  color: #0f0f0f;
+  color: #f6f6f6;
   /* background-color: #f6f6f6; */
 
   font-synthesis: none;
@@ -16,126 +16,39 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+  box-sizing: border-box;
 }
 
-.flex-column {
-  margin: 0;
-  padding-top: 10vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  text-align: center;
-  align-items: center;
-}
-
-.flex {
-  margin: 0;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  text-align: center;
-  align-items: center;
-  width: 70%;
-}
-
-.shortcutButton {
-  height: 6em;
-  min-width: 6em;
-  padding: 1.5em;
-  margin: 0.5em;
-  will-change: filter;
-  transition: 0.75s;
-
-  input {
-    max-width: 100px;
-    background: none;
-    background-color: transparent;
-    outline: none;
-    border: none;
-    display: inline;
-    font-family: inherit;
-    font-size: inherit;
-    text-align: center;
-    padding: none;
-    width: auto;
-    box-shadow: none;
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
   }
 }
 
-.shortcutButton:hover {
-  filter: drop-shadow(0 0 2em #1eabbb);
-}
-
-.row {
-  display: flex;
-  justify-content: center;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-
-a:hover {
-  color: #535bf2;
-}
-
-h1 {
-  text-align: center;
-}
-
 input,
 button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
+  @apply border 
+  text-[1em] 
+  font-medium 
+  text-white
+  bg-[#0f0f0f98]
+  duration-[0.25s] 
+  shadow-[0_2px_2px_rgba(0,0,0,0.2)] 
+  px-[1.2em] 
+  py-[0.6em] 
+  rounded-lg 
+  border-solid 
+  border-transparent;
   font-family: inherit;
-  color: #0f0f0f;
-  background-color: #ffffff;
-  transition: border-color 0.25s;
-  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
-}
-
-button {
-  cursor: pointer;
-}
-
-button:hover {
-  border-color: #396cd8;
-}
-button:active {
-  border-color: #396cd8;
-  background-color: #e8e8e8;
-}
-
-input,
-button {
   outline: none;
 }
 
-#greet-input {
-  margin-right: 5px;
+button {
+  @apply active:bg-[#0f0f0f69]
+  hover:border-[#396cd8]
+  active:border-[#5485ee] 
+    cursor-pointer;
 }
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    color: #f6f6f6;
-    /* background-color: #2f2f2f; */
-  }
-
-  a:hover {
-    color: #24c8db;
-  }
-
-  input,
-  button {
-    color: #ffffff;
-    background-color: #0f0f0f98;
-  }
-  button:active {
-    background-color: #0f0f0f69;
-  }
+button:hover {
+  filter: drop-shadow(0 0 0.5em #396cd8);
 }
