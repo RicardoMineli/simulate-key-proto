@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import Modal from "react-modal";
 
@@ -19,28 +19,25 @@ function App() {
   const [show_and_hide_global_shortcut, setShow_and_hide_global_shortcut] =
     useState<string>("");
 
-  const [userConfigStore, setUserConfigStore] = useState<Store>();
+  const readUserConfig = useCallback(async () => {
+    const store = new Store("user_config.json");
+    const val = await store.get<string>("show_and_hide_global_shortcut");
+    const val2 = await store.get<string[]>("shortcuts");
+    if (val) {
+      setShow_and_hide_global_shortcut(val);
+    } else {
+      console.log("show_and_hide_global_shortcut / val is null");
+    }
+    if (val2) {
+      setShortcuts(val2);
+    } else {
+      console.log("shortcuts / val2 is null");
+    }
+  }, []);
 
   useEffect(() => {
-    const setupStore = async () => {
-      const store = new Store("user_config.json");
-      setUserConfigStore(store);
-      const val = await store.get<string>("show_and_hide_global_shortcut");
-      const val2 = await store.get<string[]>("shortcuts");
-      if (val) {
-        setShow_and_hide_global_shortcut(val);
-      } else {
-        console.log("show_and_hide_global_shortcut / val is null");
-      }
-      if (val2) {
-        setShortcuts(val2);
-      } else {
-        console.log("shortcuts / val2 is null");
-      }
-    };
-
-    setupStore().catch(console.error);
-  }, []);
+    readUserConfig().catch(console.error);
+  }, [readUserConfig]);
 
   const openGlobalShortcutModal = (selectedShortcut: string) => {
     setSelectedShortcut(selectedShortcut);
@@ -210,7 +207,7 @@ function App() {
             <button
               className="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-md"
               onClick={async () => {
-                invoke("update_shortcuts", {
+                invoke("update_global_shortcut", {
                   newShortcut: newShortcut,
                 });
                 setShow_and_hide_global_shortcut(newShortcut);
@@ -254,7 +251,10 @@ function App() {
             <button
               className="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-md"
               onClick={async () => {
-                // invoke removal
+                invoke("remove_shortcut", {
+                  shortcutToRemove: selectedShortcut,
+                });
+                readUserConfig();
                 closeShortcutModal();
               }}
             >

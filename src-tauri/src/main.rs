@@ -34,9 +34,35 @@ fn greet(name: &str) -> String {
     println!("Called {}", name);
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
+#[tauri::command]
+fn remove_shortcut(shortcut_to_remove: &str, app: tauri::AppHandle) {
+    let stores = app.state::<StoreCollection<Wry>>();
+    let path = PathBuf::from("user_config.json");
+    with_store(app.clone(), stores, path, |store| {
+        let mut value = store
+            .get("shortcuts")
+            .expect("Failed to get value from store")
+            .clone(); // Clone the value
+
+        // Find the index to remove
+        if let Some(index) = value
+            .as_array()
+            .and_then(|arr| arr.iter().position(|x| x == shortcut_to_remove))
+        {
+            // Modify the array in-place
+            value.as_array_mut().unwrap().remove(index);
+        }
+
+        store.insert("shortcuts".to_string(), json!(value))?;
+
+        store.save()?;
+        Ok(())
+    })
+    .unwrap();
+}
 
 #[tauri::command]
-fn update_shortcuts(new_shortcut: &str, app: tauri::AppHandle) {
+fn update_global_shortcut(new_shortcut: &str, app: tauri::AppHandle) {
     let stores = app.state::<StoreCollection<Wry>>();
     let path = PathBuf::from("user_config.json");
     with_store(app.clone(), stores, path, |store| {
@@ -212,7 +238,8 @@ fn main() {
             greet,
             use_shortcut,
             hide_window,
-            update_shortcuts
+            update_global_shortcut,
+            remove_shortcut
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
