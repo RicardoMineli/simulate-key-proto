@@ -34,6 +34,33 @@ fn greet(name: &str) -> String {
     println!("Called {}", name);
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
+
+#[tauri::command]
+fn add_shortcut(shortcut_to_add: &str, app: tauri::AppHandle) {
+    let stores = app.state::<StoreCollection<Wry>>();
+    let path = PathBuf::from("user_config.json");
+    with_store(app.clone(), stores, path, |store| {
+        let mut value = store
+            .get("shortcuts")
+            .expect("Failed to get value from store")
+            .clone();
+
+        let new_value = json!(shortcut_to_add);
+
+        if let Some(arr) = value.as_array_mut() {
+            arr.push(new_value);
+        } else {
+            println!("Value is not an array!");
+        }
+
+        store.insert("shortcuts".to_string(), json!(value))?;
+
+        store.save()?;
+        Ok(())
+    })
+    .unwrap();
+}
+
 #[tauri::command]
 fn remove_shortcut(shortcut_to_remove: &str, app: tauri::AppHandle) {
     let stores = app.state::<StoreCollection<Wry>>();
@@ -239,7 +266,8 @@ fn main() {
             use_shortcut,
             hide_window,
             update_global_shortcut,
-            remove_shortcut
+            remove_shortcut,
+            add_shortcut
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

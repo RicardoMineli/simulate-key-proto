@@ -299,7 +299,10 @@ function App() {
             <button
               className="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-md"
               onClick={async () => {
-                // invoke removal
+                invoke("add_shortcut", {
+                  shortcutToAdd: newShortcut,
+                });
+                readUserConfig();
                 closeShortcutAddModal();
               }}
             >
