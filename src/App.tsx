@@ -127,14 +127,14 @@ function App() {
   return (
     <div className="flex flex-col items-center pt-20">
       {editMode && (
-        <h1 className="border border-green-600 text-green-600 rounded-lg mb-5 p-3 text-center font-bold">
+        <h1 className="border border-green-600 text-green-600 bg-green-800/20 rounded-lg mb-5 p-3 text-center font-bold">
           You are editing shortcuts now!
           <br />
           Exit to the right →
         </h1>
       )}
 
-      <div className="flex mb-5 space-x-2">
+      <div className="flex mb-5 space-x-2 pt-52">
         {listInputs}
         {editMode && (
           <button
@@ -148,17 +148,25 @@ function App() {
       </div>
 
       <div className="flex flex-col absolute top-0 right-0 m-5 space-y-2">
-        <button
-          className="flex justify-center space-x-2"
-          onClick={() =>
-            editMode
-              ? openGlobalShortcutModal(show_and_hide_global_shortcut)
-              : invoke("hide_window")
-          }
-        >
-          <span>Global Shortcut</span>
-          {editMode && editIcon}
-        </button>
+        <div className="flex flex-col items-center space-y-1">
+          {!editMode && (
+            <span>
+              This is the shortcut to <br /> hide/show the overlay. <br /> You
+              can also click it.
+            </span>
+          )}
+          <button
+            className="flex justify-center space-x-2 w-full"
+            onClick={() =>
+              editMode
+                ? openGlobalShortcutModal(show_and_hide_global_shortcut)
+                : invoke("hide_window")
+            }
+          >
+            {show_and_hide_global_shortcut}
+            {editMode && <span className="ml-2">{editIcon}</span>}
+          </button>
+        </div>
 
         <button
           className=""
@@ -183,8 +191,13 @@ function App() {
           },
         }}
       >
-        <div className="flex flex-col w-80 h-72 bg-[#0f0f0f98] border border-[#396cd8] rounded-2xl p-4 shadow shadow-sky-800 justify-between items-center">
-          <span className="text-center font-bold mb-6">Editing</span>
+        <div className="flex flex-col w-80 h-[22rem] bg-[#0f0f0f98] border border-[#396cd8] rounded-2xl p-4 shadow shadow-sky-800 justify-between items-center">
+          <span className="text-center">
+            Warning: This shortcut overwrites all functionality of other
+            shortcuts, if you use Ctrl+C here, Ctrl+C will stop copying!
+          </span>
+          <hr className="w-full border border-[#396cd8]" />
+          <span className="text-center font-bold mb-1 mt-2">Editing</span>
           <span className="mb-2 border border-[#396cd8] text-[1em] font-medium px-[1.2em] py-[0.6em] rounded-lg ">
             {selectedShortcut}
           </span>

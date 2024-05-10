@@ -8,6 +8,10 @@
 
 - [] Make app appear on current monitor for multi-monitor desktops
 
+- [] Make react state observe and reflatect the data of the user_config.json file.
+
+  - This will make the UI automatically update without any function calls.
+
 - [] Make show_and_hide_shortcut user customizable
 
   - [] Warn users when selection desired shortcut

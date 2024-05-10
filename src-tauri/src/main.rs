@@ -177,11 +177,11 @@ fn main() {
                     if store.is_empty() {
                         store.insert(
                             "show_and_hide_global_shortcut".to_string(),
-                            json!("ctrl+f12"),
+                            json!("Ctrl+F12"),
                         )?;
                         store.insert(
                             "shortcuts".to_string(),
-                            json!(["ctrl+c", "ctrl+v", "ctrl+k+ctrl+c"]),
+                            json!(["Ctrl+C", "Ctrl+V", "Ctrl+Z", "Ctrl+F"]),
                         )?;
                         // You can manually save the store after making changes.
                         // Otherwise, it will save upon graceful exit as described above.
@@ -305,6 +305,10 @@ fn parse_enigo_keys(input: &str) -> Vec<Token> {
             }
             "alt" => {
                 tokens.push(Token::Key(Key::Alt, Press));
+                used_alt = true;
+            }
+            "enter" => {
+                tokens.push(Token::Key(Key::Return, Press));
                 used_alt = true;
             }
             "f1" => {
